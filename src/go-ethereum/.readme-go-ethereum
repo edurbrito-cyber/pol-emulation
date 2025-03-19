@@ -1,0 +1,6 @@
+This folder should contain the official `go-ethereum` repository. 
+To custom build `geth`, follow the instructions at:
+https://github.com/ethereum/go-ethereum
+
+After building `geth`, the executables should be available in the `build/bin` folder.
+Copy `geth` to the `usr/bin` folder of the OpenWrt image.

@@ -1,0 +1,80 @@
+#! /bin/sh
+
+set -e
+
+## Simple batman-adv setup
+
+rmmod batman-adv || true
+modprobe batman-adv
+batctl routing_algo BATMAN_IV
+batctl if add eth0
+batctl it 5000
+ip link set up dev eth0
+ip link set up dev bat0
+batctl bl 1
+batctl meshif bat0 hop_penalty 255
+
+/etc/init.d/firewall stop
+/etc/init.d/firewall disable
+
+ip addr flush dev eth0
+ip addr flush dev bat0
+
+mac_address=$(ip addr show eth0 | awk '/ether/ {gsub(":","",$2); print $2}')
+last_two_hex_pairs="${mac_address: -4}"
+last_hex_pair="${last_two_hex_pairs: -2}"
+second_last_hex_pair="${last_two_hex_pairs:0:2}"
+
+LAST_DIGIT=0
+
+if [[ "$second_last_hex_pair" == "01" ]]; then
+    LAST_DIGIT=$(printf "%d" "0x$last_hex_pair")
+elif [[ "$second_last_hex_pair" == "02" ]]; then
+    LAST_DIGIT=$((100 + $(printf "%d" "0x$last_hex_pair")))
+else
+    echo "Error: invalid value of second_last_hex_pair"
+fi
+
+ip addr add 192.168.0.$LAST_DIGIT/24 dev bat0
+
+# geth setup
+
+chmod +x /etc/geth.sh
+/etc/geth.sh
+
+## Raspberry Pi config
+#
+# uci set wireless.@wifi-device[0].disabled="0"
+# uci commit wireless
+# wifi
+# 
+# ip link set up dev wlan0
+# 
+# sleep 5
+# 
+# ip link set up dev wlan0
+# 
+# rmmod batman-adv || true
+# modprobe batman-adv
+# batctl routing_algo BATMAN_IV
+# batctl if add wlan0
+# batctl it 5000
+# ip link set up dev wlan0
+# ip link set up dev bat0
+# ## batctl bl 1
+# ## batctl meshif bat0 hop_penalty 255
+# 
+# sleep 5
+# 
+# batctl meshif bat0 n >> /batctl.txt 2>> /batctl-err.txt
+# 
+# batctl meshif bat0 o >> /batctl.txt 2>> /batctl-err.txt
+# 
+# dmesg > /dmesg.txt
+# 
+# sleep 20
+# 
+# batctl meshif bat0 n >> /batctl.txt 2>> /batctl-err.txt
+# 
+# batctl meshif bat0 o >> /batctl.txt 2>> /batctl-err.txt
+# 

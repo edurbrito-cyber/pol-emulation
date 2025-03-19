@@ -1,0 +1,4 @@
+Place the compiled `geth-utils/bin/*` binaries in this directory.
+
+Place, as well, the compiled official `geth` binary in this directory, if custom compiled. 
+See https://github.com/ethereum/go-ethereum, for more information.
